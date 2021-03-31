@@ -2,6 +2,7 @@ import { Product } from "../product";
 
 export interface ProductState {
   showProductCode: boolean;
-  currentProduct: Product;
+  currentProductId: number | null;
   products: Product[];
+  error: String;
 }

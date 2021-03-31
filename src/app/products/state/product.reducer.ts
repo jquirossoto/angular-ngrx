@@ -1,60 +1,95 @@
-import { createFeatureSelector, createReducer, createSelector, on } from "@ngrx/store";
+import { createReducer, on } from "@ngrx/store";
 import { ProductState } from "./product.state";
-import * as ProductActions from './product.actions';
+import { ProductPageActions, ProductAPIActions } from './actions';
 
 const initialState: ProductState = {
   showProductCode: true,
-  currentProduct: null,
-  products: []
-}
-
-const getProductFeatureState = createFeatureSelector<ProductState>('products');
-
-export const getShowProductCode = createSelector(
-  getProductFeatureState,
-  state => state.showProductCode
-);
-
-export const getCurrentProduct = createSelector(
-  getProductFeatureState,
-  state => state.currentProduct
-);
-
-export const getProducts = createSelector(
-  getProductFeatureState,
-  state => state.products
-);
+  currentProductId: null,
+  products: [],
+  error: ''
+};
 
 export const productReducer = createReducer<ProductState>(
   initialState,
-  on(ProductActions.toggleProductCode, (state): ProductState => {
+  on(ProductPageActions.toggleProductCode, (state): ProductState => {
     return {
       ...state,
       showProductCode: !state.showProductCode
     };
   }),
-  on(ProductActions.setCurrentProduct, (state, action): ProductState => {
+  on(ProductPageActions.setCurrentProduct, (state, action): ProductState => {
     return {
       ...state,
-      currentProduct: action.product
+      currentProductId: action.currentProductId
     };
   }),
-  on(ProductActions.clearCurrentProduct, (state): ProductState => {
+  on(ProductPageActions.clearCurrentProduct, (state): ProductState => {
     return {
       ...state,
-      currentProduct: null
+      currentProductId: null
     };
   }),
-  on(ProductActions.initializeCurrentProduct, (state): ProductState => {
+  on(ProductPageActions.initializeCurrentProduct, (state): ProductState => {
     return {
       ...state,
-      currentProduct: {
-        id: 0,
-        productName: '',
-        productCode: 'New',
-        description: '',
-        starRating: 0
-      }
+      currentProductId: 0
+    };
+  }),
+  on(ProductAPIActions.loadProductsSuccess, (state, action): ProductState => {
+    return {
+      ...state,
+      error: '',
+      products: action.products
+    };
+  }),
+  on(ProductAPIActions.loadProductsFailure, (state, action): ProductState => {
+    return {
+      ...state,
+      products: [],
+      error: action.error
+    };
+  }),
+  on(ProductAPIActions.updateProductSuccess, (state, action): ProductState => {
+    const updateProducts = state.products.map(product => product.id === action.product.id ? action.product : product);
+    return {
+      ...state,
+      error: '',
+      currentProductId: action.product.id,
+      products: updateProducts
+    };
+  }),
+  on(ProductAPIActions.updateProductFailure, (state, action): ProductState => {
+    return {
+      ...state,
+      error: action.error
+    };
+  }),
+  on(ProductAPIActions.createProductSuccess, (state, action): ProductState => {
+    return {
+      ...state,
+      error: '',
+      currentProductId: action.product.id,
+      products: [...state.products, action.product]
+    };
+  }),
+  on(ProductAPIActions.createProductFailure, (state, action): ProductState => {
+    return {
+      ...state,
+      error: action.error
+    };
+  }),
+  on(ProductAPIActions.deleteProductSuccess, (state, action): ProductState => {
+    return {
+      ...state,
+      products: state.products.filter(product => product.id !== action.productId),
+      currentProductId: null,
+      error: ''
+    };
+  }),
+  on(ProductAPIActions.deleteProductFailure, (state, action): ProductState => {
+    return {
+      ...state,
+      error: action.error
     };
   })
 );
