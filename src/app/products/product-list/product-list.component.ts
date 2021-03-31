@@ -8,7 +8,6 @@ import { Product } from '../product';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductListComponent {
-  pageTitle = 'Products';
 
   @Input() errorMessage: String;
   @Input() displayCode: boolean;
@@ -18,6 +17,8 @@ export class ProductListComponent {
   @Output() displayCodeChanged = new EventEmitter<boolean>();
   @Output() initializeNewProduct = new EventEmitter<void>();
   @Output() productWasSelected = new EventEmitter<Product>();
+
+  pageTitle = 'Products';
 
   checkChanged(): void {
     this.displayCodeChanged.emit();

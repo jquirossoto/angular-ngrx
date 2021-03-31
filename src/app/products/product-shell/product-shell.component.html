@@ -6,10 +6,16 @@
       [selectedProduct]="selectedProduct$ | async"
       (displayCodeChanged)="checkChanged()"
       (initializeNewProduct)="newProduct()"
-      (productWasSelected)="productSelected($any($event))"
-    ></pm-product-list>
-  </div> 
+      (productWasSelected)="productSelected($any($event))">
+    </pm-product-list>
+  </div>
   <div class='col-md-8'>
-    <pm-product-edit></pm-product-edit>
+    <pm-product-edit [errorMessage]="errorMessage$ | async"
+      [selectedProduct]="selectedProduct$ | async"
+      (createProduct)="createProduct($event)"
+      (updateProduct)="updateProduct($event)"
+      (removeProduct)="deleteProduct($event)"
+      (clearProduct)="clearProduct()">
+    </pm-product-edit>
   </div>
 </div>

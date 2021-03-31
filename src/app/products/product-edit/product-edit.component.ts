@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -16,12 +16,17 @@ import { ProductPageActions } from '../state/actions';
   selector: 'pm-product-edit',
   templateUrl: './product-edit.component.html'
 })
-export class ProductEditComponent implements OnInit {
-  pageTitle = 'Product Edit';
-  errorMessage = '';
-  productForm: FormGroup;
+export class ProductEditComponent implements OnInit, OnChanges {
 
-  product: Product | null;
+  @Input() errorMessage: String;
+  @Input() selectedProduct: Product;
+  @Output() updateProduct = new EventEmitter<Product>();
+  @Output() createProduct = new EventEmitter<Product>();
+  @Output() removeProduct = new EventEmitter<number>();
+  @Output() clearProduct = new EventEmitter<void>();
+
+  pageTitle = 'Product Edit';
+  productForm: FormGroup;
 
   // Use with the generic validation message class
   displayMessage: { [key: string]: string } = {};
@@ -50,6 +55,12 @@ export class ProductEditComponent implements OnInit {
     // Define an instance of the validator for use with this form,
     // passing in this form's set of validation messages.
     this.genericValidator = new GenericValidator(this.validationMessages);
+  }
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.selectedProduct) {
+      const product = changes.selectedProduct.currentValue as Product;
+      this.displayProduct(product);
+    }
   }
 
   ngOnInit(): void {
@@ -83,10 +94,7 @@ export class ProductEditComponent implements OnInit {
   }
 
   displayProduct(product: Product | null): void {
-    // Set the local product property
-    this.product = product;
-
-    if (product) {
+    if (product && this.productForm) {
       // Reset the form back to pristine
       this.productForm.reset();
 
@@ -116,11 +124,10 @@ export class ProductEditComponent implements OnInit {
   deleteProduct(product: Product): void {
     if (product && product.id) {
       if (confirm(`Really delete the product: ${product.productName}?`)) {
-        this.store.dispatch(ProductPageActions.deleteProduct({ productId: product.id }));
+        this.removeProduct.emit(product.id);
       }
     } else {
-      // No need to delete, it was never saved
-      this.store.dispatch(ProductPageActions.clearCurrentProduct());
+      this.clearProduct.emit();
     }
   }
 
@@ -132,9 +139,9 @@ export class ProductEditComponent implements OnInit {
         // This ensures values not on the form, such as the Id, are retained
         const product = { ...originalProduct, ...this.productForm.value };
         if (product.id === 0) {
-          this.store.dispatch(ProductPageActions.createProduct({ product }));
+          this.createProduct.emit(product);
         } else {
-          this.store.dispatch(ProductPageActions.updateProduct({ product }));
+          this.updateProduct.emit(product);
         }
       }
     }
